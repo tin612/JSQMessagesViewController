@@ -26,6 +26,7 @@ const CGFloat kJSQMessagesToolbarContentViewHorizontalSpacingDefault = 8.0f;
 @interface JSQMessagesToolbarContentView ()
 
 @property (weak, nonatomic) IBOutlet JSQMessagesComposerTextView *textView;
+@property (weak, nonatomic) IBOutlet UIView *boundView;
 
 @property (weak, nonatomic) IBOutlet UIView *leftBarButtonContainerView;
 @property (weak, nonatomic) IBOutlet NSLayoutConstraint *leftBarButtonContainerViewWidthConstraint;
@@ -55,12 +56,15 @@ const CGFloat kJSQMessagesToolbarContentViewHorizontalSpacingDefault = 8.0f;
 - (void)awakeFromNib
 {
     [super awakeFromNib];
-
+    
     [self setTranslatesAutoresizingMaskIntoConstraints:NO];
-
+    
     self.leftHorizontalSpacingConstraint.constant = kJSQMessagesToolbarContentViewHorizontalSpacingDefault;
     self.rightHorizontalSpacingConstraint.constant = kJSQMessagesToolbarContentViewHorizontalSpacingDefault;
-
+    self.boundView.layer.cornerRadius = 13.0f;
+    self.boundView.layer.borderWidth = 0.5f;
+    self.boundView.layer.borderColor = [UIColor lightGrayColor].CGColor;
+    self.boundView.layer.masksToBounds = TRUE;
     self.backgroundColor = [UIColor clearColor];
 }
 
@@ -69,6 +73,7 @@ const CGFloat kJSQMessagesToolbarContentViewHorizontalSpacingDefault = 8.0f;
 - (void)setBackgroundColor:(UIColor *)backgroundColor
 {
     [super setBackgroundColor:backgroundColor];
+    
     self.leftBarButtonContainerView.backgroundColor = backgroundColor;
     self.rightBarButtonContainerView.backgroundColor = backgroundColor;
 }
@@ -78,7 +83,7 @@ const CGFloat kJSQMessagesToolbarContentViewHorizontalSpacingDefault = 8.0f;
     if (_leftBarButtonItem) {
         [_leftBarButtonItem removeFromSuperview];
     }
-
+    
     if (!leftBarButtonItem) {
         _leftBarButtonItem = nil;
         self.leftHorizontalSpacingConstraint.constant = 0.0f;
@@ -86,21 +91,21 @@ const CGFloat kJSQMessagesToolbarContentViewHorizontalSpacingDefault = 8.0f;
         self.leftBarButtonContainerView.hidden = YES;
         return;
     }
-
+    
     if (CGRectEqualToRect(leftBarButtonItem.frame, CGRectZero)) {
         leftBarButtonItem.frame = self.leftBarButtonContainerView.bounds;
     }
-
+    
     self.leftBarButtonContainerView.hidden = NO;
     self.leftHorizontalSpacingConstraint.constant = kJSQMessagesToolbarContentViewHorizontalSpacingDefault;
     self.leftBarButtonItemWidth = CGRectGetWidth(leftBarButtonItem.frame);
-
+    
     [leftBarButtonItem setTranslatesAutoresizingMaskIntoConstraints:NO];
-
+    
     [self.leftBarButtonContainerView addSubview:leftBarButtonItem];
     [self.leftBarButtonContainerView jsq_pinAllEdgesOfSubview:leftBarButtonItem];
     [self setNeedsUpdateConstraints];
-
+    
     _leftBarButtonItem = leftBarButtonItem;
 }
 
@@ -115,7 +120,7 @@ const CGFloat kJSQMessagesToolbarContentViewHorizontalSpacingDefault = 8.0f;
     if (_rightBarButtonItem) {
         [_rightBarButtonItem removeFromSuperview];
     }
-
+    
     if (!rightBarButtonItem) {
         _rightBarButtonItem = nil;
         self.rightHorizontalSpacingConstraint.constant = 0.0f;
@@ -123,21 +128,22 @@ const CGFloat kJSQMessagesToolbarContentViewHorizontalSpacingDefault = 8.0f;
         self.rightBarButtonContainerView.hidden = YES;
         return;
     }
-
+    
     if (CGRectEqualToRect(rightBarButtonItem.frame, CGRectZero)) {
         rightBarButtonItem.frame = self.rightBarButtonContainerView.bounds;
     }
-
+    self.rightBarButtonContainerView.layer.masksToBounds = TRUE;
+    self.rightBarButtonContainerView.layer.cornerRadius = 13.0f;
     self.rightBarButtonContainerView.hidden = NO;
     self.rightHorizontalSpacingConstraint.constant = kJSQMessagesToolbarContentViewHorizontalSpacingDefault;
     self.rightBarButtonItemWidth = CGRectGetWidth(rightBarButtonItem.frame);
-
+    
     [rightBarButtonItem setTranslatesAutoresizingMaskIntoConstraints:NO];
-
+    
     [self.rightBarButtonContainerView addSubview:rightBarButtonItem];
     [self.rightBarButtonContainerView jsq_pinAllEdgesOfSubview:rightBarButtonItem];
     [self setNeedsUpdateConstraints];
-
+    
     _rightBarButtonItem = rightBarButtonItem;
 }
 

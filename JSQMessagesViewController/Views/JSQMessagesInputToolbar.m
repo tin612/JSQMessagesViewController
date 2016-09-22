@@ -46,33 +46,28 @@ static void * kJSQMessagesInputToolbarKeyValueObservingContext = &kJSQMessagesIn
 - (void)awakeFromNib
 {
     [super awakeFromNib];
-    self.backgroundColor = [UIColor whiteColor];
+    [self setTranslatesAutoresizingMaskIntoConstraints:NO];
+    
     self.jsq_isObserving = NO;
-    self.sendButtonLocation = JSQMessagesInputSendButtonLocationRight;
-    self.enablesSendButtonAutomatically = YES;
-
+    self.sendButtonOnRight = YES;
+    
     self.preferredDefaultHeight = 44.0f;
     self.maximumHeight = NSNotFound;
-
+    
     JSQMessagesToolbarContentView *toolbarContentView = [self loadToolbarContentView];
     toolbarContentView.frame = self.frame;
+    toolbarContentView.backgroundColor = [UIColor blackColor];
     [self addSubview:toolbarContentView];
     [self jsq_pinAllEdgesOfSubview:toolbarContentView];
     [self setNeedsUpdateConstraints];
     _contentView = toolbarContentView;
-
+    
     [self jsq_addObservers];
-
-    JSQMessagesToolbarButtonFactory *toolbarButtonFactory = [[JSQMessagesToolbarButtonFactory alloc] initWithFont:[UIFont preferredFontForTextStyle:UIFontTextStyleHeadline]];
-    self.contentView.leftBarButtonItem = [toolbarButtonFactory defaultAccessoryButtonItem];
-    self.contentView.rightBarButtonItem = [toolbarButtonFactory defaultSendButtonItem];
-
-    [self updateSendButtonEnabledState];
-
-    [[NSNotificationCenter defaultCenter] addObserver:self
-                                             selector:@selector(textViewTextDidChangeNotification:)
-                                                 name:UITextViewTextDidChangeNotification
-                                               object:_contentView.textView];
+    
+    self.contentView.leftBarButtonItem = [JSQMessagesToolbarButtonFactory defaultAccessoryButtonItem];
+    self.contentView.rightBarButtonItem = [JSQMessagesToolbarButtonFactory defaultSendButtonItem];
+    
+    [self toggleSendButtonEnabled];
 }
 
 - (JSQMessagesToolbarContentView *)loadToolbarContentView
@@ -86,7 +81,6 @@ static void * kJSQMessagesInputToolbarKeyValueObservingContext = &kJSQMessagesIn
 - (void)dealloc
 {
     [self jsq_removeObservers];
-    [[NSNotificationCenter defaultCenter] removeObserver:self];
 }
 
 #pragma mark - Setters
@@ -95,12 +89,6 @@ static void * kJSQMessagesInputToolbarKeyValueObservingContext = &kJSQMessagesIn
 {
     NSParameterAssert(preferredDefaultHeight > 0.0f);
     _preferredDefaultHeight = preferredDefaultHeight;
-}
-
-- (void)setEnablesSendButtonAutomatically:(BOOL)enablesSendButtonAutomatically
-{
-    _enablesSendButtonAutomatically = enablesSendButtonAutomatically;
-    [self updateSendButtonEnabledState];
 }
 
 #pragma mark - Actions
@@ -117,30 +105,16 @@ static void * kJSQMessagesInputToolbarKeyValueObservingContext = &kJSQMessagesIn
 
 #pragma mark - Input toolbar
 
-- (void)updateSendButtonEnabledState
+- (void)toggleSendButtonEnabled
 {
-    if (!self.enablesSendButtonAutomatically) {
-        return;
+    BOOL hasText = [self.contentView.textView hasText];
+    
+    if (self.sendButtonOnRight) {
+        self.contentView.rightBarButtonItem.enabled = hasText;
     }
-
-    BOOL enabled = [self.contentView.textView hasText];
-    switch (self.sendButtonLocation) {
-        case JSQMessagesInputSendButtonLocationRight:
-            self.contentView.rightBarButtonItem.enabled = enabled;
-            break;
-        case JSQMessagesInputSendButtonLocationLeft:
-            self.contentView.leftBarButtonItem.enabled = enabled;
-            break;
-        default:
-            break;
+    else {
+        self.contentView.leftBarButtonItem.enabled = hasText;
     }
-}
-
-#pragma mark - Notifications
-
-- (void)textViewTextDidChangeNotification:(NSNotification *)notification
-{
-    [self updateSendButtonEnabledState];
 }
 
 #pragma mark - Key-value observing
@@ -149,29 +123,29 @@ static void * kJSQMessagesInputToolbarKeyValueObservingContext = &kJSQMessagesIn
 {
     if (context == kJSQMessagesInputToolbarKeyValueObservingContext) {
         if (object == self.contentView) {
-
+            
             if ([keyPath isEqualToString:NSStringFromSelector(@selector(leftBarButtonItem))]) {
-
+                
                 [self.contentView.leftBarButtonItem removeTarget:self
                                                           action:NULL
                                                 forControlEvents:UIControlEventTouchUpInside];
-
+                
                 [self.contentView.leftBarButtonItem addTarget:self
                                                        action:@selector(jsq_leftBarButtonPressed:)
                                              forControlEvents:UIControlEventTouchUpInside];
             }
             else if ([keyPath isEqualToString:NSStringFromSelector(@selector(rightBarButtonItem))]) {
-
+                
                 [self.contentView.rightBarButtonItem removeTarget:self
                                                            action:NULL
                                                  forControlEvents:UIControlEventTouchUpInside];
-
+                
                 [self.contentView.rightBarButtonItem addTarget:self
                                                         action:@selector(jsq_rightBarButtonPressed:)
                                               forControlEvents:UIControlEventTouchUpInside];
             }
-
-            [self updateSendButtonEnabledState];
+            
+            [self toggleSendButtonEnabled];
         }
     }
 }
@@ -181,17 +155,17 @@ static void * kJSQMessagesInputToolbarKeyValueObservingContext = &kJSQMessagesIn
     if (self.jsq_isObserving) {
         return;
     }
-
+    
     [self.contentView addObserver:self
                        forKeyPath:NSStringFromSelector(@selector(leftBarButtonItem))
                           options:0
                           context:kJSQMessagesInputToolbarKeyValueObservingContext];
-
+    
     [self.contentView addObserver:self
                        forKeyPath:NSStringFromSelector(@selector(rightBarButtonItem))
                           options:0
                           context:kJSQMessagesInputToolbarKeyValueObservingContext];
-
+    
     self.jsq_isObserving = YES;
 }
 
@@ -200,12 +174,12 @@ static void * kJSQMessagesInputToolbarKeyValueObservingContext = &kJSQMessagesIn
     if (!_jsq_isObserving) {
         return;
     }
-
+    
     @try {
         [_contentView removeObserver:self
                           forKeyPath:NSStringFromSelector(@selector(leftBarButtonItem))
                              context:kJSQMessagesInputToolbarKeyValueObservingContext];
-
+        
         [_contentView removeObserver:self
                           forKeyPath:NSStringFromSelector(@selector(rightBarButtonItem))
                              context:kJSQMessagesInputToolbarKeyValueObservingContext];
